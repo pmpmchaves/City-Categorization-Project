@@ -5,6 +5,7 @@ from PIL import Image
 import requests
 import os
 import streamlit as st
+import pandas as pd
 
 def get_rect(lat, lon, pop):
     if pop > 10000000:
@@ -16,58 +17,7 @@ def get_rect(lat, lon, pop):
     box_coord = upper_left_corner + lower_right_corner
     return box_coord
 
-CSS = """
-h1, h2 {
-    text-align: center;
-}
-h6 {
-    text-align: center;
-    font-size: 16px;
-    font-weight: 100;
-}
-p {
-    text-align: center;
-}
-"""
-
-CLIENT_ID = 'b3d396e1-a257-4489-9c1d-7d24177c05e7'
-CLIENT_SECRET = "pF;ajNy(p)vt;mi5;PQE3i}+1y+8wH|lw,lND0_8"
-X_API_KEY = 'cf4NxGcWpzoxoxQdiHZjfg==m0jURpBpDRHpKBBN'
-
-# set up credentials
-client = oauthlib.oauth2.BackendApplicationClient(client_id=CLIENT_ID)
-oauth = requests_oauthlib.OAuth2Session(client=client)
-
-# get an authentication token
-token = oauth.fetch_token(token_url='https://services.sentinel-hub.com/oauth/token',
-                        client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
-
-##############################################
-## Setting page configurations on Streamlit ##
-##############################################
-st.set_page_config(
-            page_title="City Categorization",
-            page_icon="🌎",
-            layout="centered", # wide
-            initial_sidebar_state="auto") # collapsed
-
-st.markdown("""# City Categorization
-## A pilot project to assist territorial planning actions 🗺""")
-st.markdown("""###### made with 😀 by **Francisco Garcia**, **Pedro Chaves** and **Rodrigo Pinto** in 🇵🇹""")
-st.write(f'<style>{CSS}</style>', unsafe_allow_html=True)
-
-columns = st.columns(2)
-
-###############
-## Main code ##
-###############
-city = columns[0].text_input('City name 🌎')
-
-if columns[0].button('Click me to start the process'):
-    # print is visible in the server output, not in the page
-    #print('button clicked!')
-
-
+def get_satellite_image(city):
     evalscript = """
     //VERSION=3
 
@@ -127,8 +77,8 @@ if columns[0].button('Click me to start the process'):
             ]
         },
         "output": {
-            "width": 2560,
-            "height": 2560,
+            "width": 2496,
+            "height": 2496,
             "responses": [
             {
                 "identifier": "default",
@@ -146,9 +96,7 @@ if columns[0].button('Click me to start the process'):
         }
 
         #Send the request
-        response = oauth.request(
-            "POST", url_request, headers=headers_request, json=json_request
-        )
+        response = oauth.request("POST", url_request, headers=headers_request, json=json_request)
         # creating a image object (main image)
         city_image = Image.open(io.BytesIO(response.content))
         # save a image using extension
@@ -158,8 +106,95 @@ if columns[0].button('Click me to start the process'):
         cloud_coverage += 2
 
     columns[0].success('The search is over! 🎯 🏆')
+
+
+CSS = """
+h1, h2 {
+    text-align: center;
+}
+h4 {
+    text-align: center;
+}
+h6 {
+    text-align: center;
+    font-size: 16px;
+    font-weight: 100;
+}
+p {
+    text-align: center;
+}
+"""
+
+CLIENT_ID = 'b3d396e1-a257-4489-9c1d-7d24177c05e7'
+CLIENT_SECRET = "pF;ajNy(p)vt;mi5;PQE3i}+1y+8wH|lw,lND0_8"
+X_API_KEY = 'cf4NxGcWpzoxoxQdiHZjfg==m0jURpBpDRHpKBBN'
+
+# set up credentials
+client = oauthlib.oauth2.BackendApplicationClient(client_id=CLIENT_ID)
+oauth = requests_oauthlib.OAuth2Session(client=client)
+
+# get an authentication token
+token = oauth.fetch_token(token_url='https://services.sentinel-hub.com/oauth/token',
+                        client_id=CLIENT_ID, client_secret=CLIENT_SECRET)
+
+##############################################
+## Setting page configurations on Streamlit ##
+##############################################
+st.set_page_config(
+            page_title="City Categorization",
+            page_icon="🌎",
+            layout="centered", # wide
+            initial_sidebar_state="auto") # collapsed
+
+
+#Containers
+st.write(f'<style>{CSS}</style>', unsafe_allow_html=True)
+###############
+## Main code ##
+###############
+
+st.markdown("""# City Categorization
+## A pilot project to assist territorial planning actions 🗺
+###### made with 😀 by **Francisco Garcia**, **Pedro Chaves** and **Rodrigo Pinto** in 🇵🇹""")
+
+#Columns
+columns = st.columns(2)
+
+uploaded_file = columns[0].file_uploader("Choose a file")
+if uploaded_file is not None:
+    columns[1].image(uploaded_file, caption=str(uploaded_file.name).capitalize())
+
+
+columns[0].write('#### OR')
+
+city = columns[0].text_input('City name 🌎')
+if columns[0].button('Click me to find the city satellite image'):
+    uploaded_file.close()
+    get_satellite_image(city=city)
     image = Image.open(f'{city}.tiff')
     columns[1].image(image, caption=city.capitalize())
+
+# if uploaded_file is not None:
+#      # To read file as bytes:
+#      bytes_data = uploaded_file.getvalue()
+#      st.write(bytes_data)
+
+#      # To convert to a string based IO:
+#      stringio = StringIO(uploaded_file.getvalue().decode("utf-8"))
+#      st.write(stringio)
+
+#      # To read file as string:
+#      string_data = stringio.read()
+#      st.write(string_data)
+
+#      # Can be used wherever a "file-like" object is accepted:
+#      dataframe = pd.read_csv(uploaded_file)
+#      st.write(dataframe)
+############################################
+## Access the model e get processed image ##
+############################################
+# if st.button('Click me to process the image and see the result'):
+#     st.image('New_Test.tif', caption='Cape Town')
 
 # fill those informations before run
 #CLIENT_ID = "<YOUR CLIENT ID FROM SENTINEL HUB>"
