@@ -114,7 +114,7 @@ def categories_df(y_pred_cat):
 
 
 # Function to Convert Results into an Image
-def categories_to_image(y_pred_cat, original_image):
+def categories_to_image(y_pred_cat, im):
 
     rgb_map = {
         0: (55, 86, 35),  # 'Forest'
