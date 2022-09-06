@@ -1,2 +1,28 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+from tensorflow.keras.models import load_model
+from scripts.formulas import (get_image, blockshaped,
+                              unblockshaped, get_array_pictures,
+                              get_picture_arrays, pred_to_array,
+                              categories_df, categories_to_image, save_tif)
+
+import os
+import numpy as np
+import pandas as pd
+
+# Define some Parameters
+LOCAL_DATA_PATH = os.get.environ('DATA_SOURCE')
+CITY = os.get.environ('CITY')
+
+# Load Image (from local data for now)
+if os.environ.get('DATA_SOURCE') == 'local':
+    im = get_image(os.path.join(LOCAL_DATA_PATH, 'raw', CITY))
+else:
+    pass # to add API
+
+# Convert Data to Arrays
+X = get_array_pictures(im, os.environ.get('PIXELS'))
+
+# Load Model - > We will call it from the cloud after
+if os.environ.get('DATA_SOURCE') == 'local':

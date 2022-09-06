@@ -53,3 +53,10 @@ pypi_test:
 
 pypi:
 	@twine upload dist/* -u $(PYPI_USERNAME)
+
+
+#################### PACKAGE ACTIONS ###################
+
+reinstall_package:
+	@pip uninstall -y city-categorization || :
+	@pip install -e .
