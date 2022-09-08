@@ -4,6 +4,7 @@ from city_categorization.main import image_load
 from scripts.get_image import get_city_info
 from city_categorization import main
 import numpy as np
+import time
 
 ##############################################
 ## Setting page configurations on Streamlit ##
@@ -35,15 +36,15 @@ p {
 st.write(f'<style>{CSS}</style>', unsafe_allow_html=True)
 
 st.markdown("""# City Categorization
-## A pilot project to assist territorial planning actions 🗺
+## A pilot project to assist urban planning actions 🗺
 ###### made with 😀 by **Francisco Garcia**, **Pedro Chaves** and **Rodrigo Pinto** in 🇵🇹""")
-
-#Columns
-columns = st.columns(2)
-
+st.markdown("""---""")
 ###############
 ## Main code ##
 ###############
+
+#Columns
+columns = st.columns(2)
 
 uploaded_file = columns[0].file_uploader("Choose a file")
 if uploaded_file is not None:
@@ -58,20 +59,18 @@ if columns[0].button('Click me to find the city satellite image'):
     columns[0].write('Working to find the best image...')
     columns[0].write('🔎 🌍')
     city_image = image_load(city=city)
+    columns[0].success('The search is over! 🎯 🏆')
+    time.sleep(2)
     image = Image.open(f'{city}.tiff')
     columns[1].image(image, caption=city.capitalize())
-    columns[0].success('The search is over! 🎯 🏆')
+    st.markdown("""---""")
 
-    final_df, final_image = main.final_outputs(city)
-    processed_image = Image.fromarray(final_image.astype(np.uint8))
-    processed_image.save(f'{city}_categorized.tiff')
-    new_columns = st.columns(2)
-    new_columns[0].dataframe(final_df)
-    new_columns[1].image(final_image, caption='Processed Image')
+    with st.spinner('Working in deep learning'):
+        final_df, final_image = main.final_outputs(city)
+        processed_image = Image.fromarray(final_image.astype(np.uint8))
+        processed_image.save(f'{city}_categorized.tiff')
 
-
-############################################
-## Access the model e get processed image ##
-############################################
-# if st.button('Click me to process the image and see the result'):
-#     st.image('New_Test.tif', caption='Cape Town')
+        #Columns for results
+        results_columns = st.columns(2)
+        results_columns[0].dataframe(final_df)
+        results_columns[1].image(final_image, caption='Processed Image')
