@@ -42,4 +42,6 @@ memoized-property
 termcolor
 
 # temp
-tensorflow
+#tensorflow
+# Extra
+protobuf<=3.20
