@@ -1,16 +1,18 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+import numpy as np
+from pydantic import BaseModel
 from tensorflow.keras.applications.resnet50 import preprocess_input
-from scripts.formulas import (get_image, blockshaped, unblockshaped,
-                              get_array_pictures, get_picture_arrays,
-                              pred_to_array, categories_df,
-                              categories_to_image, save_tif)
+from tensorflow.keras.models import load_model
 
+
+class ImgTensor(BaseModel):
+    X: list
 
 
 app = FastAPI()
 
-# app.state.model = load_model()
+app.state.model = load_model('../../model')
 
 app.add_middleware(
     CORSMiddleware,
@@ -21,12 +23,13 @@ app.add_middleware(
 )
 
 
-@app.get("/predict")
-def predict(X):
-    model = load_model()
+@app.post("/test")
+async def create_image(img: ImgTensor):
+    x = np.array(img.X)
+    y_pred = str(app.state.model.predict(x))
+    return {'prediction': y_pred}
 
 
-# define a root `/` endpoint
 @app.get("/")
 def index():
-    return {'greeting': 'Hello'}
+    return {'greeting': 'Hi'}
