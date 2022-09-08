@@ -35,9 +35,9 @@ p {
 """
 st.write(f'<style>{CSS}</style>', unsafe_allow_html=True)
 
-CLIENT_ID = 'b3d396e1-a257-4489-9c1d-7d24177c05e7'
-CLIENT_SECRET = "pF;ajNy(p)vt;mi5;PQE3i}+1y+8wH|lw,lND0_8"
-X_API_KEY = 'cf4NxGcWpzoxoxQdiHZjfg==m0jURpBpDRHpKBBN'
+CLIENT_ID = os.environ.get('CLIENT_ID')
+CLIENT_SECRET = os.environ.get('CLIENT_SECRET')
+X_API_KEY = os.environ.get('X_API_KEY')
 
 # set up credentials
 client = oauthlib.oauth2.BackendApplicationClient(client_id=CLIENT_ID)
@@ -148,6 +148,8 @@ def get_satellite_image(city):
 
     columns[0].success('The search is over! 🎯 🏆')
 
+    return response.content
+
 ###############
 ## Main code ##
 ###############
@@ -168,7 +170,9 @@ columns[0].write('#### OR')
 
 city = columns[0].text_input('City name 🌎')
 if columns[0].button('Click me to find the city satellite image'):
-    get_satellite_image(city=city)
+    city_image = get_satellite_image(city=city)
+    city_image = Image.open(io.BytesIO(city_image))
+    print(f'Outside function - {type(city_image)}')
     image = Image.open(f'{city}.tiff')
     columns[1].image(image, caption=city.capitalize())
 
