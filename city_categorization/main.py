@@ -9,6 +9,8 @@ import os
 from scripts.get_image import get_satellite_image
 from PIL import Image
 import io
+import streamlit as st
+import time
 
 # Define some Parameters
 LOCAL_DATA_PATH = os.environ.get("LOCAL_DATA_PATH")
@@ -35,14 +37,14 @@ def make_array(city):
     im = image_load(city=city)
     print(im.size)
     X = get_array_pictures(im, PIXELS)
-    print(f"Generated a {type(X)} with {X.shape} shape")
+    #print(f"Generated a {type(X)} with {X.shape} shape")
     return X
 
 # Load Model - > We will call it from the cloud after
 def model_load():
     if os.environ.get('MODEL_SOURCE') == 'local':
         model = load_model(os.path.join(LOCAL_MODEL_PATH, 'augmented_model'))
-        print(f'loaded model {model}')
+        #print(f'loaded model {model}')
     else:
         pass
     return model
@@ -51,7 +53,7 @@ def model_load():
 def preprocess(city):
     X = make_array(city=city)
     X_preprocessed = preprocess_input(X)
-    print(f"Preprocessed X")
+    #print(f"Preprocessed X")
     return X_preprocessed
 
 # Predict
@@ -59,7 +61,7 @@ def predict(city):
     model = model_load()
     X_preprocessed = preprocess(city=city)
     y_pred = model.predict(X_preprocessed)
-    print(f"We predicted with shape {y_pred.shape}")
+    #print(f"We predicted with shape {y_pred.shape}")
     return y_pred
 
 # Create a Categorical Variable (Pipeline)
@@ -81,19 +83,25 @@ def rgb_image(city):
     im = image_load(city=city)
     y_pred_cat = y_cat_make(city=city)
     RGB_image = categories_to_image(y_pred_cat, im)
-    print(f"Generated a final image with {RGB_image.shape} ")
+    #print(f"Generated a final image with {RGB_image.shape} ")
     return RGB_image
 
 def final_outputs(city):
+    st.write('🗺 Loading image...')
     im = image_load(city=city)
+    st.write('🤖 Loading the machine learning model...')
     y_pred_cat = y_cat_make(city=city)
     prediction_df = categories_df(y_pred_cat)
+    st.write('🖨 Generating the output...')
+    time.sleep(2)
     RGB_image = categories_to_image(y_pred_cat, im)
     print(f'''
           Process finished, we produced:
           {prediction_df}
           and an image with {RGB_image.shape}
           ''')
+    time.sleep(2)
+    st.write('🎉 Finished!')
     return prediction_df, RGB_image
 
 
