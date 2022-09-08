@@ -3,6 +3,7 @@ import streamlit as st
 from city_categorization.main import image_load
 from scripts.get_image import get_city_info
 from city_categorization import main
+import numpy as np
 
 ##############################################
 ## Setting page configurations on Streamlit ##
@@ -62,8 +63,11 @@ if columns[0].button('Click me to find the city satellite image'):
     columns[0].success('The search is over! 🎯 🏆')
 
     final_df, final_image = main.final_outputs(city)
-
-    st.image(final_image, caption='Processed Image')
+    processed_image = Image.fromarray(final_image.astype(np.uint8))
+    processed_image.save(f'{city}_categorized.tiff')
+    new_columns = st.columns(2)
+    new_columns[0].dataframe(final_df)
+    new_columns[1].image(final_image, caption='Processed Image')
 
 
 ############################################
