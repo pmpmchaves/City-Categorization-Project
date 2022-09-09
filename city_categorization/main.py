@@ -3,7 +3,7 @@ from tensorflow.keras.applications.resnet50 import preprocess_input
 from scripts.formulas import (get_image, blockshaped, unblockshaped,
                               get_array_pictures, get_picture_arrays,
                               pred_to_array, categories_df,
-                              categories_to_image, save_tif)
+                              categories_to_image, save_tif, api_request)
 
 import os
 from scripts.get_image import get_satellite_image
@@ -19,6 +19,8 @@ LOCAL_MODEL_PATH = os.environ.get('LOCAL_MODEL_PATH')
 DATA_TYPE = os.environ.get('DATA_TYPE')
 LOAD_FILE = f"{CITY}{DATA_TYPE}"
 PIXELS = int(os.environ.get('PIXELS'))
+BATCH_SIZE = int(os.environ.get('BATCH_SIZE'))
+PREDICTION_API = os.environ.get('PREDICTION_API')
 
 
 # Load Image (from local data for now)
@@ -66,9 +68,14 @@ def predict(city):
 
 # Create a Categorical Variable (Pipeline)
 def y_cat_make(city):
-    y_pred = predict(city=city)
-    y_pred_cat = pred_to_array(y_pred)
-    print(f"We reshaped y with shape {y_pred_cat.shape}")
+    if os.environ.get('MODEL_SOURCE') == 'local':
+        y_pred = predict(city=city)
+        y_pred_cat = pred_to_array(y_pred)
+        print(f"We reshaped y with shape {y_pred_cat.shape}")
+    elif os.environ.get('MODEL_SOURCE') == 'api':
+        X_preprocessed = preprocess(city=city)
+        y_pred_cat = api_request(PREDICTION_API, X_preprocessed, BATCH_SIZE,
+                                 PIXELS)
     return y_pred_cat
 
 # Create a Dataframe
@@ -86,23 +93,26 @@ def rgb_image(city):
     #print(f"Generated a final image with {RGB_image.shape} ")
     return RGB_image
 
+
 def final_outputs(city):
-    st.write('🗺 Loading image...')
-    im = image_load(city=city)
-    st.write('🤖 Loading the machine learning model...')
-    y_pred_cat = y_cat_make(city=city)
-    prediction_df = categories_df(y_pred_cat)
-    st.write('🖨 Generating the output...')
-    time.sleep(2)
-    RGB_image = categories_to_image(y_pred_cat, im)
-    print(f'''
-          Process finished, we produced:
-          {prediction_df}
-          and an image with {RGB_image.shape}
-          ''')
-    time.sleep(2)
-    st.write('🎉 Finished!')
+    with st.spinner('🗺 Loading image...'):
+        im = image_load(city=city)
+    with st.spinner('🤖 Loading the machine learning model...'):
+        y_pred_cat = y_cat_make(city=city)
+        prediction_df = categories_df(y_pred_cat)
+    with st.spinner('🖨 Generating the output...'):
+        time.sleep(2)
+        RGB_image = categories_to_image(y_pred_cat, im)
+        print(f'''
+            Process finished, we produced:
+            {prediction_df}
+            and an image with {RGB_image.shape}
+            ''')
+        time.sleep(2)
     return prediction_df, RGB_image
+
+
+
 
 
 
