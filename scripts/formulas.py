@@ -3,6 +3,9 @@ import numpy as np
 import pandas as pd
 import rasterio
 from rasterio.plot import reshape_as_raster
+import requests
+import re
+import ast
 
 # Function to open Image
 def get_image(path):
@@ -162,3 +165,53 @@ def save_tif(path_satellite, path_oputput):
         dst.write(raster)
 
     return None
+
+
+# Define Pad Preprocessed
+def pad_preprocessed(X_preprocessed, pictures_per_batch, pixels):
+    missing_pictures = (pictures_per_batch -
+                        X_preprocessed.shape[0] % pictures_per_batch)
+    pad_array = np.zeros(
+        (missing_pictures, pixels, pixels,
+         3))  # Create n missing_pictures of size (pixel, pixel) in RGB
+    X_preprocessed_pad = np.append(X_preprocessed, pad_array,
+                                   axis=0)  # Append empty pictures
+    return X_preprocessed_pad
+
+
+# Function to Save as Image (not geo-located)
+def save_image(RGB_image, path_oputput):
+    image_export = Image.fromarray(RGB_image.astype(np.uint8))
+    image_export.save(path_oputput)
+    return None
+
+# Function to Call API
+def api_request(url, X_preprocessed, batch_size, pixels):
+    # Set url
+    url = url
+    # We pad X_preprocessed for prediction
+    X_preprocessed_pad = pad_preprocessed(X_preprocessed, batch_size,pixels)
+    # We get an empty list for appending results
+    response_list_long = []
+    # We start a loop for requests
+    for i in range(0, X_preprocessed_pad.shape[0], batch_size):
+        # We set the data request and batch size
+        data = {'X': X_preprocessed_pad[i:i + batch_size, :, :, :].tolist()}
+        # We run a request
+        response = requests.post(url, json=data)
+        # We fix the response to an array
+        response_processed = ast.literal_eval(response.json()['prediction'])
+        # We append responses to our list
+        response_list_long.append(response_processed)
+    # We flatten the list
+    response_list_flat = [
+        item for sublist in response_list_long for item in sublist
+    ]
+    # We Get Padding
+    remove_elements = (batch_size - X_preprocessed.shape[0] % batch_size)
+    # We extract the last elements from padding
+    response_list = response_list_flat[:len(response_list_flat) -
+                                       remove_elements]
+    # We Return
+    y_pred_cat = np.array(response_list)
+    return y_pred_cat
