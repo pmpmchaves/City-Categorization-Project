@@ -87,21 +87,21 @@ def rgb_image(city):
     return RGB_image
 
 def final_outputs(city):
-    st.write('🗺 Loading image...')
-    im = image_load(city=city)
-    st.write('🤖 Loading the machine learning model...')
-    y_pred_cat = y_cat_make(city=city)
-    prediction_df = categories_df(y_pred_cat)
-    st.write('🖨 Generating the output...')
-    time.sleep(2)
-    RGB_image = categories_to_image(y_pred_cat, im)
-    print(f'''
-          Process finished, we produced:
-          {prediction_df}
-          and an image with {RGB_image.shape}
-          ''')
-    time.sleep(2)
-    st.write('🎉 Finished!')
+    with st.spinner('🗺 Loading image...'):
+        im = image_load(city=city)
+    with st.spinner('🤖 Loading the machine learning model...'):
+        y_pred_cat = y_cat_make(city=city)
+        prediction_df = categories_df(y_pred_cat)
+    with st.spinner('🖨 Generating the output...'):
+        time.sleep(2)
+        RGB_image = categories_to_image(y_pred_cat, im)
+        print(f'''
+            Process finished, we produced:
+            {prediction_df}
+            and an image with {RGB_image.shape}
+            ''')
+        time.sleep(2)
+    #st.write('🎉 Finished!')
     return prediction_df, RGB_image
 
 
