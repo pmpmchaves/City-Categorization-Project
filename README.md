@@ -1,3 +1,7 @@
+# City Categorization Project
+
+This project was conducted as a final assignment for Le Wagon's Data Science Bootcamp.
+
 # Data analysis
 - Document here the project: city-categorization
 - Description: Project Description
